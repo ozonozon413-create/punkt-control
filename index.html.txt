@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ПунктКонтроль</title>
+
+    <!-- Подключаем манифест -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Настройки цвета шапки браузера -->
+    <meta name="theme-color" content="#00f3ff">
+
+    <!-- Иконка для iPhone (обязательно!) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <style>
+        :root {
+            --bg: #12121a;
+            --panel: #1a1a24;
+            --text: #e0e0e0;
+            --accent: #00f3ff;
+            --dim: #666;
+            --success: #2ed573;
+            --danger: #ff4757;
+            --warning: #ffa500;
+            --info: #3498db;
+            --border: #2b2b36;
+            --radius: 16px;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0 15px 60px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1 { 
+            text-align: center; 
+            font-size: 20px; 
+            padding: 15px 0; 
+            margin: 0; 
+            background: var(--panel); 
+            border-bottom: 1px solid var(--border); 
+            position: sticky; 
+            top: 0; 
+            z-index: 10;
+            text-shadow: 0 0 10px var(--accent);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--panel);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--dim);
+            font-size: 12px;
+            text-align: center;
+            padding: 5px 0;
+            flex-grow: 1;
+            cursor: pointer;
+        }
+        .nav-btn.active {
+            color: var(--accent);
+        }
+        .nav-btn svg {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; padding-top: 10px; }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 10px;
+        }
+        .day-card {
+            background: var(--panel);
+            padding: 10px 5px;
+            border-radius: var(--radius);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .day-card:hover { background: #25252b; }
+        .day-header {
+            font-size: 10px;
+            color: var(--dim);
+            text-transform: uppercase;
+            line-height: 1;
+        }
+        .day-number {
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1;
+        }
+        .has-shift {
+            background: #1f3a1f;
+            border-color: var(--success);
+            box-shadow: 0 0 10px rgba(46, 213, 115, 0.3);
+        }
+        .shift-list {
+            margin-top: 4px;
+            font-size: 9px;
+            line-height: 1.2;
+            max-height: 40px;
+            overflow-y: auto;
+        }
+        .shift-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1px 0;
+        }
+        .shift-item button {
+            padding: 0 4px;
+            font-size: 8px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: var(--panel);
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+        }
+        .controls input, .controls select {
+            padding: 12px;
+            font-size: 14px;
+            flex-grow: 1;
+        }
+        .controls button {
+            padding: 12px 16px;
+            font-size: 14px;
+            white-space: nowrap;
+            min-width: 48px;
+        }
+
+        .employee-list { list-style: none; padding: 0; }
+        .employee-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10px;
+            background: var(--panel);
+            margin-bottom: 5px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+        .employee-item span { font-size: 16px; }
+        .employee-item button {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .stats-table th, .stats-table td {
+            border: 1px solid var(--border);
+            padding: 12px;
+            text-align: right;
+        }
+        .stats-table th { background: var(--panel); color: var(--accent); }
+        .stats-table td.left { text-align: left; }
+
+        .summary-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--panel);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            text-align: center;
+            font-size: 16px;
+        }
+        .export-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .filter-select {
+            padding: 12px;
+            font-size: 14px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--panel);
+            color: var(--text);
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--panel);
+            padding: 20px;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+        .modal-content label {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        .modal-content input, .modal-content select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: #0f0f13;
+            color: var(--text);
+            font-size: 16px;
+        }
+        .modal-content button {
+            width: 48%;
+            padding: 12px;
+            font-size: 14px;
+        }
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--dim);
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>ПунктКонтроль</h1>
+
+    <div id="calendar" class="tab-content active">
+        <div class="controls">
+            <input type="month" id="calendarMonth" />
+            <button onclick="renderCalendar()">Месяц</button>
+        </div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+    </div>
+
+    <div id="employees" class="tab-content">
+        <div class="controls">
+            <input type="text" id="newEmployeeName" placeholder="Имя" />
+            <input type="number" id="newEmployeeRate" placeholder="Ставка" min="0" step="1" />
+            <button onclick="addEmployee()">+</button>
+        </div>
+        <ul id="employeeList" class="employee-list"></ul>
+    </div>
+
+    <div id="stats" class="tab-content">
+        <select id="filterEmployee" class="filter-select" onchange="recalcStats()">
+            <option value="all">Все сотрудники</option>
+        </select>
+        <table class="stats-table">
+            <thead><tr>
+                <th class="left">Сотрудник</th>
+                <th>Ставка</th>
+                <th>Дни</th>
+                <th>Сумма</th>
+            </tr></thead>
+            <tbody id="statsBody"></tbody>
+        </table>
+        <div class="summary-box">
+            <p id="totalSummary">Итого: <b>0 ₽</b></p>
+        </div>
+        <button class="export-btn info" onclick="exportStatsToCSV()">📤 Экспорт в Excel</button>
+    </div>
+
+    <div id="shiftModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeShiftModal()">&times;</button>
+            <h3 style="margin-top:0;">Добавить смену</h3>
+            <label>Дата: <input type="date" id="modalDate" readonly></label>
+            <label>Сотрудник: <select id="modalEmployee"></select></label>
+            <label>Перерыв (ч): <input type="number" id="modalBreak" min="0" max="8" step="0.5" value="1"></label>
+            <div style="display:flex;gap:10px;margin-top:10px;">
+                <button onclick="saveShiftFromModal()">✅ Сохранить</button>
+                <button onclick="closeShiftModal()" style="background:#444;">❌ Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-btn active" onclick="showTab('calendar')">📅 Календарь</button>
+        <button class="nav-btn" onclick="showTab('employees')">👥 Люди</button>
+        <button class="nav-btn" onclick="showTab('stats')">📊 Итоги</button>
+    </div>
+
+    <script>
+        let employees = JSON.parse(localStorage.getItem('pc_employees')) || [
+            { id: 1, name: 'Иван Петров', rate: 1500 },
+            { id: 2, name: 'Анна Смирнова', rate: 1600 },
+            { id: 3, name: 'Сергей Волков', rate: 1400 }
+        ];
+        const shifts = JSON.parse(localStorage.getItem('pc_shifts_v4')) || {};
+
+        function saveEmployees() { localStorage.setItem('pc_employees', JSON.stringify(employees)); }
+        function saveShifts() { localStorage.setItem('pc_shifts_v4', JSON.stringify(shifts)); }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            if (tabName === 'calendar') renderCalendar();
+            else if (tabName === 'employees') renderEmployeeList();
+            else if (tabName === 'stats') recalcStats();
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            const monthVal = document.getElementById('calendarMonth').value || new Date().toISOString().slice(0,7);
+            document.getElementById('calendarMonth').value = monthVal;
+            const [year, monthNum] = monthVal.split('-').map(Number);
+            const firstDay = new Date(year, monthNum - 1, 1);
+            const lastDay = new Date(year, monthNum, 0);
+            const weekdays = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+            weekdays.forEach(day => {
+                const h = document.createElement('div'); h.className = 'day-card day-header'; h.textContent = day; grid.appendChild(h);
+            });
+            const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+            for (let i=0; i<startOffset; i++) grid.appendChild(document.createElement('div'));
+            for (let day=1; day<=lastDay.getDate(); day++) {
+                const dateStr = `${year}-${String(monthNum).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const card = document.createElement('div'); card.className = 'day-card'; card.dataset.date = dateStr;
+                if (shifts[dateStr] && shifts[dateStr].length > 0) card.classList.add('has-shift');
+                card.innerHTML = `<div class="day-number">${day}</div><div class="shift-list"></div>`;
+                const shiftList = card.querySelector('.shift-list');
+                if (shifts[dateStr]) {
+                    shifts[dateStr].forEach((s, index) => {
+                        const div = document.createElement('div'); div.className = 'shift-item';
+                        const span = document.createElement('span'); span.textContent = `${s.employee} (${s.break}ч)`;
+                        const btn = document.createElement('button'); btn.textContent = '✕'; btn.className = 'danger';
+                        btn.onclick = (e) => { e.stopPropagation(); if(confirm('Удалить?')) { shifts[dateStr].splice(index,1); if(shifts[dateStr].length===0){ delete shifts[dateStr]; card.classList.remove('has-shift'); } saveShifts(); renderCalendar(); recalcStats(); }};
+                        div.appendChild(span); div.appendChild(btn); shiftList.appendChild(div);
+                    });
+                }
+                card.onclick = () => openShiftModalForDate(dateStr);
+                grid.appendChild(card);
+            }
+        }
+        function openShiftModalForDate(date) { document.getElementById('modalDate').value = date; initSelect(); document.getElementById('shiftModal').classList.add('active'); }
+        function closeShiftModal() { document.getElementById('shiftModal').classList.remove('active'); }
+        function saveShiftFromModal() {
+            const date = document.getElementById('modalDate').value;
+            const employee = document.getElementById('modalEmployee').value;
+            const breakHours = parseFloat(document.getElementById('modalBreak').value);
+            if (!date || !employee) { alert('Заполните поля'); return; }
+            if (!shifts[date]) shifts[date] = []; shifts[date].push({ employee, break: breakHours });
+            saveShifts(); closeShiftModal(); renderCalendar(); recalcStats();
+        }
+
+        function addEmployee() {
+            const name = document.getElementById('newEmployeeName').value.trim();
+            const rate = parseFloat(document.getElementById('newEmployeeRate').value);
+            if (!name || isNaN(rate)) { alert('Введите данные'); return; }
+            employees.push({ id: Date.now(), name, rate }); saveEmployees();
+            document.getElementById('newEmployeeName').value = ''; document.getElementById('newEmployeeRate').value = '';
+            renderEmployeeList(); initSelect(); populateFilterSelect();
+        }
+        function deleteEmployee(id) { if(!confirm('Удалить?')) return; employees = employees.filter(e => e.id !== id); saveEmployees(); renderEmployeeList(); initSelect(); populateFilterSelect(); recalcStats(); }
+        function editEmployee(id) { const emp = employees.find(e => e.id === id); if (!emp) return; const nr = parseFloat(prompt('Ставка:', emp.rate)); if(!isNaN(nr)) { emp.rate = nr; saveEmployees(); renderEmployeeList(); recalcStats(); } }
+        function renderEmployeeList() {
+            const list = document.getElementById('employeeList'); list.innerHTML = '';
+            employees.forEach(e => {
+                const li = document.createElement('li'); li.className = 'employee-item';
+                li.innerHTML = `<span><b>${e.name}</b> — ${e.rate} ₽</span><div><button class="warning" onclick="editEmployee(${e.id})">✎</button><button class="danger" onclick="deleteEmployee(${e.id})">✕</button></div>`;
+                list.appendChild(li);
+            });
+        }
+        function initSelect() { const s = document.getElementById('modalEmployee'); s.innerHTML = ''; employees.forEach(e => { const o=document.createElement('option'); o.value=e.name; o.textContent=e.name; s.appendChild(o); }); }
+        function populateFilterSelect() { const s = document.getElementById('filterEmployee'); s.length=1; employees.forEach(e => { const o=document.createElement('option'); o.value=e.name; o.textContent=e.name; s.appendChild(o); }); }
+
+        function recalcStats() {
+            const tbody = document.getElementById('statsBody'); tbody.innerHTML = '';
+            const selected = document.getElementById('filterEmployee').value;
+            const daysWorked = {}; Object.keys(shifts).forEach(date => { const list = selected==='all' ? shifts[date] : shifts[date].filter(s=>s.employee===selected); list.forEach(s => { daysWorked[s.employee] = (daysWorked[s.employee]||0)+1; }); });
+            const emps = selected==='all' ? employees : employees.filter(e=>e.name===selected);
+            let total=0; emps.forEach(e => { const days=daysWorked[e.name]||0; const sum=days*e.rate; total+=sum; const tr=document.createElement('tr'); tr.innerHTML=`<td class="left">${e.name}</td><td>${e.rate}</td><td>${days}</td><td>${sum}</td>`; tbody.appendChild(tr); });
+            document.getElementById('totalSummary').innerHTML = `Итого: <b>${total} ₽</b>`;
+        }
+
+        function exportStatsToCSV() {
+            const selected = document.getElementById('filterEmployee').value;
+            const daysWorked = {}; Object.keys(shifts).forEach(date => { const list = selected==='all' ? shifts[date] : shifts[date].filter(s=>s.employee===selected); list.forEach(s => { daysWorked[s.employee] = (daysWorked[s.employee]||0)+1; }); });
+            const emps = selected==='all' ? employees : employees.filter(e=>e.name===selected);
+            let csv="data:text/csv;charset=utf-8,\uFEFFСотрудник;Ставка;Дни;Сумма\n"; emps.forEach(e => { const days=daysWorked[e.name]||0; const sum=days*e.rate; csv+=`"${e.name}";${e.rate};${days};${sum}\n`; });
+            const link=document.createElement('a'); link.href=encodeURI(csv); link.download=(selected==='all'?'itogi.csv':`${selected}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { renderEmployeeList(); initSelect(); populateFilterSelect(); renderCalendar(); recalcStats(); });
+    </script>
+</body>
+</html>
